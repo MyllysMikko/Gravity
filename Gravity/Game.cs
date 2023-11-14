@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Numerics;
 using System.Threading.Tasks;
+using TurboMapReader;
 
 namespace Gravity
 {
@@ -13,6 +14,8 @@ namespace Gravity
         int window_width = 960;
         int window_height = 720;
         Player player;
+        
+        TiledMap map;
 
         Stack<GameState> gameStates = new Stack<GameState>();
 
@@ -29,12 +32,10 @@ namespace Gravity
             Raylib.SetTargetFPS(60);
             Raylib.InitWindow(window_width, window_height, "Gravity");
 
-            
             player = new Player(new Vector2(0, 0), 100, 50);
 
             gameStates.Push(GameState.Alive);
 
-            LoadLevel();
         }
 
         void LoadLevel()
@@ -42,6 +43,12 @@ namespace Gravity
             //Lataa kenttä
             Vector2 playerPos = new Vector2(window_width * 0.5f, window_height * 0.5f);
             player.transform.position = playerPos;
+
+            map = MapReader.LoadMapFromFile("Map/testmap.tmj");
+            if (map != null)
+            {
+                Console.WriteLine("Map loaded!");
+            }
         }
 
         void ResetLevel()
@@ -90,7 +97,22 @@ namespace Gravity
             Raylib.EndDrawing();
         }
 
-
+        void DrawMap()
+        {
+            foreach(var layer in map.layers)
+            {
+                for (int row = 0; row < map.height; row++)
+                {
+                    for (int col = 0; col < map.width; col++)
+                    {
+                        int tileId = layer.data[row * layer.width + col];
+                        int x = col * map.tilewidth;
+                        int y = row * map.tileheight;
+                        //DrawTile(x, y, tileId);
+                    }
+                }
+            }
+        }
 
 
 
