@@ -48,7 +48,7 @@ namespace Gravity
             Vector2 playerPos = new Vector2(window_width * 0.5f, window_height * 0.5f);
             player.transform.position = playerPos;
 
-            map = MapReader.LoadMapFromFile("Map/testmap2.tmj");
+            map = MapReader.LoadMapFromFile("Map/room.tmj");
             foreach (var tilesetFile in map.tilesetFiles)
             {
                 string fileName = tilesetFile.imageWoPath;
@@ -130,18 +130,22 @@ namespace Gravity
         void DrawTile(int index, int x, int y, int TileId)
         {
             //Tiled aloittaa laskennan yhdestä.
-            TileId -= 1;
-            int tilesPerRow = map.tilesetFiles[index].imagewidth / map.tilewidth;
-            //Console.WriteLine((float)TileId / (float)tilesPerRow);
-            float rowf = MathF.Floor(TileId / tilesPerRow);
+            if (TileId != 0)
+            {
+                TileId -= 1;
+                int tilesPerRow = map.tilesetFiles[index].imagewidth / map.tilewidth;
+                //Console.WriteLine((float)TileId / (float)tilesPerRow);
+                float rowf = MathF.Floor(TileId / tilesPerRow);
 
-            int row = Convert.ToInt32(rowf);
-            int column = TileId % tilesPerRow;
+                int row = Convert.ToInt32(rowf);
+                int column = TileId % tilesPerRow;
 
-            int u = column * map.tilewidth;
-            int v = row * map.tileheight;
+                int u = column * map.tilewidth;
+                int v = row * map.tileheight;
 
-            Raylib.DrawTextureRec(tileSets[index], new Rectangle(u, v, map.tilewidth, map.tileheight), new Vector2(x, y), Raylib.WHITE);
+                Raylib.DrawTextureRec(tileSets[index], new Rectangle(u, v, map.tilewidth, map.tileheight), new Vector2(x, y), Raylib.WHITE);
+            }
+            
 
         }
 
