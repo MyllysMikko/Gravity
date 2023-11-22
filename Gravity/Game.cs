@@ -23,6 +23,8 @@ namespace Gravity
 
         Stack<GameState> gameStates = new Stack<GameState>();
 
+        List<Rectangle> hitTiles = new List<Rectangle>();
+
 
         public void Start()
         {
@@ -85,8 +87,8 @@ namespace Gravity
                         break;
 
                     case GameState.Alive:
-                        Update();
                         Draw();
+                        Update();
                         break;
 
                     default:
@@ -97,7 +99,40 @@ namespace Gravity
 
         void Update()
         {
+            Vector2 previousPosition = player.transform.position;
             player.Update();
+            Vector2 movement = new Vector2(player.transform.position.X - previousPosition.X, player.transform.position.Y - previousPosition.Y);
+
+            Vector2 playerTilePosition = new Vector2(player.transform.position.X / map.tilewidth, player.transform.position.Y / map.tileheight);
+            Vector2 playerMaxTilePosition = new Vector2(
+                (player.transform.position.X + player.collision.size.X) / map.tilewidth,
+                (player.transform.position.Y + player.collision.size.Y) / map.tileheight);
+
+            List<Vector2> hitTiles = new List<Vector2>();
+
+            for (int px = (int)playerTilePosition.X; px < playerMaxTilePosition.X + 1; px++)
+            {
+                for (int py = (int)playerTilePosition.Y; py < playerMaxTilePosition.Y; py++)
+                {
+                    int tileId = map.layers[0].data[py * map.layers[0].width + px];
+
+                    if (tileId != 0)
+                    {
+                        hitTiles.Add(new Vector2(px, py));
+                        //Console.WriteLine("Collision!");
+                    }
+                }
+            }
+
+            if (hitTiles.Count > 0)
+            {
+                CheckCollisions(hitTiles, movement);
+            }
+
+            //Console.WriteLine($"{playerTilePosition.X}, {playerTilePosition.Y} : {playerMaxTilePosition.X}, {playerMaxTilePosition.Y}");
+
+
+
         }
 
         void Draw()
@@ -105,12 +140,15 @@ namespace Gravity
             Raylib.BeginDrawing();
             Raylib.ClearBackground(Raylib.BLANK);
             DrawMap();
+            Raylib.DrawText($"{Raylib.GetFPS()}", 0, 0, 50, Raylib.LIME);
+
             player.Draw();
             Raylib.EndDrawing();
         }
 
         void DrawMap()
         {
+            hitTiles.Clear();
             for (int i = 0; i < map.layers.Count; i++)
             //oreach(var layer in map.layers)
             {
@@ -143,10 +181,53 @@ namespace Gravity
                 int u = column * map.tilewidth;
                 int v = row * map.tileheight;
 
-                Raylib.DrawTextureRec(tileSets[index], new Rectangle(u, v, map.tilewidth, map.tileheight), new Vector2(x, y), Raylib.WHITE);
-            }
-            
 
+                Raylib.DrawTextureRec(tileSets[index], new Rectangle(u, v, map.tilewidth, map.tileheight), new Vector2(x, y), Raylib.WHITE);
+
+                //Rectangle tileRec = new Rectangle(x, y, map.tilewidth, map.tileheight);
+                //
+                //bool collision = Raylib.CheckCollisionRecs(tileRec, player.GetRec());
+                //
+                //if (collision)
+                //{
+                //    hitTiles.Add(tileRec);
+                //}
+            }
+        }
+
+        void CheckCollisions(List<Vector2> hitTiles, Vector2 movement)
+        {
+            Rectangle playerRec = player.GetRec();
+            foreach (var tile in hitTiles)
+            {
+                Rectangle tileRectangle = new Rectangle(tile.X * map.tilewidth, tile.Y * map.tileheight, map.tilewidth, map.tileheight);
+                if (Raylib.CheckCollisionRecs(playerRec, tileRectangle))
+                {
+                    Rectangle collision = Raylib.GetCollisionRec(playerRec, tileRectangle);
+                    //Console.WriteLine($"{collision.width}, {collision.height}");
+
+                    Vector2 playerPos = player.transform.position;
+                    Vector2 positionCorrection = new Vector2();
+
+                    if (movement.X > 0)
+                    {
+                        positionCorrection.X = -collision.width;
+                    }
+                    else if (movement.X < 0)
+                    {
+                        positionCorrection.X = collision.width;
+                    }
+
+                    //if (movement.Y > 0)
+                    //{
+                    //    positionCorrection.Y = -collision.height;
+                    //}
+
+                    Console.WriteLine($"{positionCorrection.X}, {positionCorrection.Y}");
+
+                    player.transform.position = playerPos + positionCorrection;
+                }
+            }
         }
 
 

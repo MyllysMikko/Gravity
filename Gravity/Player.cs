@@ -47,7 +47,14 @@ namespace Gravity
                 transform.position.X += transform.speed * Raylib.GetFrameTime();
             }
 
+            transform.position.Y += 50 * Raylib.GetFrameTime(); ;
+
             return false;
+        }
+
+        public Rectangle GetRec()
+        {
+            return new Rectangle(transform.position.X, transform.position.Y, collision.size.X, collision.size.Y);
         }
 
     }
