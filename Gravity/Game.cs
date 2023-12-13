@@ -70,7 +70,9 @@ namespace Gravity
         }
 
 
-
+        /// <summary>
+        /// Switch ja stack jäivät käyttämättömäksi sillä en ehtinyt tehdä menuja.
+        /// </summary>
         void Loop()
         {
             while(!Raylib.WindowShouldClose())
@@ -103,35 +105,14 @@ namespace Gravity
             player.Update();
             Vector2 movement = new Vector2(player.transform.position.X - previousPosition.X, player.transform.position.Y - previousPosition.Y);
 
-            Vector2 playerTilePosition = new Vector2(player.transform.position.X / map.tilewidth, player.transform.position.Y / map.tileheight);
-            Vector2 playerMaxTilePosition = new Vector2(
-                (player.transform.position.X + player.collision.size.X) / map.tilewidth,
-                (player.transform.position.Y + player.collision.size.Y) / map.tileheight);
-
+            
             List<Vector2> hitTiles = new List<Vector2>();
 
-            for (int px = (int)playerTilePosition.X; px < playerMaxTilePosition.X + 1; px++)
-            {
-                for (int py = (int)playerTilePosition.Y; py < playerMaxTilePosition.Y; py++)
-                {
-                    int tileId = map.layers[0].data[py * map.layers[0].width + px];
-
-                    if (tileId != 0)
-                    {
-                        hitTiles.Add(new Vector2(px, py));
-                        //Console.WriteLine($"{playerTilePosition.X}, {playerTilePosition.Y}");
-                    }
-                }
-            }
-
-            if (hitTiles.Count > 0)
+            if (GetNearbyTiles(out hitTiles))
             {
                 CheckCollisions(hitTiles, movement);
             }
-
-            //Console.WriteLine($"{playerTilePosition.X}, {playerTilePosition.Y} : {playerMaxTilePosition.X}, {playerMaxTilePosition.Y}");
-
-
+  
 
         }
 
@@ -146,11 +127,13 @@ namespace Gravity
             Raylib.EndDrawing();
         }
 
+        /// <summary>
+        /// Piirtää kartan
+        /// </summary>
         void DrawMap()
         {
             hitTiles.Clear();
             for (int i = 0; i < map.layers.Count; i++)
-            //oreach(var layer in map.layers)
             {
                 for (int row = 0; row < map.height; row++)
                 {
@@ -165,14 +148,19 @@ namespace Gravity
             }
         }
 
+        /// <summary>
+        /// Piirtää halutun Tilen haluttuun kordinaattiin
+        /// </summary>
+        /// <param name="index">Käytettävän tilesetin index</param>
+        /// <param name="x">Tilen X-kordinaatti</param>
+        /// <param name="y">Tilen Y-kordinaatti</param>
+        /// <param name="TileId">Piirrettävä tile</param>
         void DrawTile(int index, int x, int y, int TileId)
         {
-            //Tiled aloittaa laskennan yhdestä.
             if (TileId != 0)
             {
                 TileId -= 1;
                 int tilesPerRow = map.tilesetFiles[index].imagewidth / map.tilewidth;
-                //Console.WriteLine((float)TileId / (float)tilesPerRow);
                 float rowf = MathF.Floor(TileId / tilesPerRow);
 
                 int row = Convert.ToInt32(rowf);
@@ -184,19 +172,61 @@ namespace Gravity
 
                 Raylib.DrawTextureRec(tileSets[index], new Rectangle(u, v, map.tilewidth, map.tileheight), new Vector2(x, y), Raylib.WHITE);
 
-                //Rectangle tileRec = new Rectangle(x, y, map.tilewidth, map.tileheight);
-                //
-                //bool collision = Raylib.CheckCollisionRecs(tileRec, player.GetRec());
-                //
-                //if (collision)
-                //{
-                //    hitTiles.Add(tileRec);
-                //}
             }
         }
 
 
+        /// <summary>
+        /// Ottaa pelaajan läheisyydeltä tilet joihin tämä voisi törmätä.
+        /// Funktio palauttaa True mikäli mahdollisia törmäyksiä on havaittu. Muuten palautetaan False.
+        /// 
+        /// Funktio palauttaa listan mahdollisistä törmäyksistä out parametriin.
+        /// 
+        /// </summary>
+        /// <param name="returnHitTiles">Muuttuja johon lista mahdollisista törmäyksistä sijoitetaan</param>
+        /// <returns></returns>
+  
+        // Matikassa on jotain pielessä sillä se reagoi seiniin hieman ennenkuin pelaaja oikeasti koskettaa, mutta toimii oikein Y-Akselilla.
+        // Tämä kuitenkin on varmaa fine, sillä me myöhemmin käydään nämä tilet läpi jolloin testataan ollaako oikeasti törmätty.
+        bool GetNearbyTiles(out List<Vector2> returnHitTiles)
+        {
+            Vector2 playerTilePosition = new Vector2(player.transform.position.X / map.tilewidth, player.transform.position.Y / map.tileheight);
+            Vector2 playerMaxTilePosition = new Vector2(
+                (player.transform.position.X + player.collision.size.X) / map.tilewidth,
+                (player.transform.position.Y + player.collision.size.Y) / map.tileheight);
 
+
+            List<Vector2> hitTiles = new List<Vector2>();
+
+            for (int px = (int)playerTilePosition.X; px < playerMaxTilePosition.X + 1; px++)
+            {
+                for (int py = (int)playerTilePosition.Y; py < playerMaxTilePosition.Y; py++)
+                {
+                    int tileId = map.layers[0].data[py * map.layers[0].width + px];
+
+                    if (tileId != 0)
+                    {
+                        hitTiles.Add(new Vector2(px, py));
+                    }
+                }
+            }
+
+            returnHitTiles = hitTiles;
+
+            if (hitTiles.Count > 0)
+            {
+                return true;
+            }
+
+            return false;
+        }
+
+        /// <summary>
+        /// Käy lapi annetut Tilet ja käy läpi onko pelaaja törmännyt näihin.
+        /// Pelaajan liikettä käytetään tarkistamaan onko törmäys järkevä.
+        /// </summary>
+        /// <param name="hitTiles">Tarkistettavat Tilet</param>
+        /// <param name="movement">Pelaajan liike</param>
         void CheckCollisions(List<Vector2> hitTiles, Vector2 movement)
         {
 
@@ -208,17 +238,18 @@ namespace Gravity
                 if (Raylib.CheckCollisionRecs(playerRec, tileRectangle))
                 {
                     Rectangle collision = Raylib.GetCollisionRec(playerRec, tileRectangle);
-                    //Console.WriteLine($"{collision.width}, {collision.height}");
 
                     Vector2 playerPos = player.transform.position;
                     Vector2 positionCorrection = new Vector2();
 
+                    bool touchedWall = false;
 
                     if (movement.X > 0)
                     {
                         if (collision.width <= movement.X)
                         {
                             positionCorrection.X = -collision.width;
+                            touchedWall = true;
                         }
                     }
                     else if (movement.X < 0)
@@ -226,34 +257,37 @@ namespace Gravity
                         if (collision.width <= -movement.X)
                         {
                             positionCorrection.X = collision.width;
+                            touchedWall = true;
                         }
 
                     }
 
                     collision = Raylib.GetCollisionRec(player.GetRec(), tileRectangle);
 
-                    if (movement.Y > 0)
+                    //Kolme if-lausetta siäkkäin tuntuu vähä oudolle. Kuitenkin toimii!
+                    if (!touchedWall)
                     {
-                        if (collision.height <= movement.Y)
+                        if (movement.Y > 0)
                         {
-                            player.inAir = false;
-                            positionCorrection.Y = -collision.height;
-                        }
+                            if (collision.height <= movement.Y)
+                            {
+                                player.inAir = false;
+                                positionCorrection.Y = -collision.height;
+                            }
 
-                    }
-                    else if (movement.Y < 0)
-                    {
-                        if (collision.height <= -movement.Y)
+                        }
+                        else if (movement.Y < 0)
                         {
-                            player.inAir = false;
-                            positionCorrection.Y = collision.height;
+                            if (collision.height <= -movement.Y)
+                            {
+                                player.inAir = false;
+                                positionCorrection.Y = collision.height;
+                            }
                         }
                     }
-
-                    
-                    //Console.WriteLine($"{positionCorrection.X}, {positionCorrection.Y}");
 
                     player.transform.position = playerPos + positionCorrection;
+
                 }
             }
         }
