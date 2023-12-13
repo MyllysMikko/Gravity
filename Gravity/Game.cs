@@ -19,7 +19,7 @@ namespace Gravity
         
         TiledMap map;
 
-        List<Texture> tileSets = new List<Texture>();
+        Texture tileSet;
 
         Stack<GameState> gameStates = new Stack<GameState>();
 
@@ -54,8 +54,7 @@ namespace Gravity
             foreach (var tilesetFile in map.tilesetFiles)
             {
                 string fileName = tilesetFile.imageWoPath;
-                Texture texture = Raylib.LoadTexture($"Map/Tilesets/{fileName}");
-                tileSets.Add(texture);
+                tileSet = Raylib.LoadTexture($"Map/Tilesets/{fileName}");
             }
             if (map != null)
             {
@@ -130,6 +129,7 @@ namespace Gravity
         /// <summary>
         /// Piirtää kartan
         /// </summary>
+
         void DrawMap()
         {
             hitTiles.Clear();
@@ -151,7 +151,7 @@ namespace Gravity
         /// <summary>
         /// Piirtää halutun Tilen haluttuun kordinaattiin
         /// </summary>
-        /// <param name="index">Käytettävän tilesetin index</param>
+        /// <param name="index">Kartan layer josta piirretään</param>
         /// <param name="x">Tilen X-kordinaatti</param>
         /// <param name="y">Tilen Y-kordinaatti</param>
         /// <param name="TileId">Piirrettävä tile</param>
@@ -170,7 +170,7 @@ namespace Gravity
                 int v = row * map.tileheight;
 
 
-                Raylib.DrawTextureRec(tileSets[index], new Rectangle(u, v, map.tilewidth, map.tileheight), new Vector2(x, y), Raylib.WHITE);
+                Raylib.DrawTextureRec(tileSet, new Rectangle(u, v, map.tilewidth, map.tileheight), new Vector2(x, y), Raylib.WHITE);
 
             }
         }
@@ -227,6 +227,8 @@ namespace Gravity
         /// </summary>
         /// <param name="hitTiles">Tarkistettavat Tilet</param>
         /// <param name="movement">Pelaajan liike</param>
+        
+        //Koodi ei vielä reagoi siihen jos pelaaja kävelee reunalta alas. Onneksi testikenttä onkin suljettu laatikko!
         void CheckCollisions(List<Vector2> hitTiles, Vector2 movement)
         {
 
