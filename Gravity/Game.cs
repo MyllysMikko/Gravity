@@ -38,7 +38,7 @@ namespace Gravity
             Raylib.SetTargetFPS(60);
             Raylib.InitWindow(window_width, window_height, "Gravity");
 
-            player = new Player(new Vector2(0, 0), 100, 50);
+            player = new Player(new Vector2(0, 0), 300, 50);
 
             gameStates.Push(GameState.Alive);
 
@@ -87,8 +87,8 @@ namespace Gravity
                         break;
 
                     case GameState.Alive:
-                        Draw();
                         Update();
+                        Draw();
                         break;
 
                     default:
@@ -119,7 +119,7 @@ namespace Gravity
                     if (tileId != 0)
                     {
                         hitTiles.Add(new Vector2(px, py));
-                        //Console.WriteLine("Collision!");
+                        //Console.WriteLine($"{playerTilePosition.X}, {playerTilePosition.Y}");
                     }
                 }
             }
@@ -195,11 +195,15 @@ namespace Gravity
             }
         }
 
+
+
         void CheckCollisions(List<Vector2> hitTiles, Vector2 movement)
         {
-            Rectangle playerRec = player.GetRec();
+
             foreach (var tile in hitTiles)
             {
+
+                Rectangle playerRec = player.GetRec();
                 Rectangle tileRectangle = new Rectangle(tile.X * map.tilewidth, tile.Y * map.tileheight, map.tilewidth, map.tileheight);
                 if (Raylib.CheckCollisionRecs(playerRec, tileRectangle))
                 {
@@ -209,21 +213,45 @@ namespace Gravity
                     Vector2 playerPos = player.transform.position;
                     Vector2 positionCorrection = new Vector2();
 
+
                     if (movement.X > 0)
                     {
-                        positionCorrection.X = -collision.width;
+                        if (collision.width <= movement.X)
+                        {
+                            positionCorrection.X = -collision.width;
+                        }
                     }
                     else if (movement.X < 0)
                     {
-                        positionCorrection.X = collision.width;
+                        if (collision.width <= -movement.X)
+                        {
+                            positionCorrection.X = collision.width;
+                        }
+
                     }
 
-                    //if (movement.Y > 0)
-                    //{
-                    //    positionCorrection.Y = -collision.height;
-                    //}
+                    collision = Raylib.GetCollisionRec(player.GetRec(), tileRectangle);
 
-                    Console.WriteLine($"{positionCorrection.X}, {positionCorrection.Y}");
+                    if (movement.Y > 0)
+                    {
+                        if (collision.height <= movement.Y)
+                        {
+                            player.inAir = false;
+                            positionCorrection.Y = -collision.height;
+                        }
+
+                    }
+                    else if (movement.Y < 0)
+                    {
+                        if (collision.height <= -movement.Y)
+                        {
+                            player.inAir = false;
+                            positionCorrection.Y = collision.height;
+                        }
+                    }
+
+                    
+                    //Console.WriteLine($"{positionCorrection.X}, {positionCorrection.Y}");
 
                     player.transform.position = playerPos + positionCorrection;
                 }

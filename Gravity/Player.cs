@@ -13,6 +13,9 @@ namespace Gravity
         public Transform transform { get; private set; }
         public Collision collision { get; private set; }
 
+        public bool inAir = true;
+
+        int gravity = 500;
 
         //Texture playerImage;
 
@@ -46,8 +49,17 @@ namespace Gravity
             {
                 transform.position.X += transform.speed * Raylib.GetFrameTime();
             }
+            if (Raylib.IsKeyPressed(KeyboardKey.KEY_SPACE) && !inAir)
+            {
+                inAir = true;
+                gravity *= -1;
+            }
 
-            transform.position.Y += 50 * Raylib.GetFrameTime(); ;
+            if (inAir)
+            {
+                transform.position.Y += gravity * Raylib.GetFrameTime();
+            }
+
 
             return false;
         }
