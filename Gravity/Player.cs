@@ -17,24 +17,16 @@ namespace Gravity
 
         int gravity = 500;
 
-        //Texture playerImage;
 
 
         public Player(Vector2 startPos, int speed, int size)
         {
             transform = new Transform(startPos, new Vector2(0, 0), speed);
             collision = new Collision(new Vector2(size, size));
-            //this.playerImage = playerImage;
         }
 
         public void Draw()
         {
-
-            //float scaleX = collision.size.X / playerImage.width;
-            //float scaleY = collision.size.Y / playerImage.height;
-            //float scale = Math.Min(scaleX, scaleY);
-            //
-            //Raylib.DrawTextureEx(playerImage, transform.position, 0f, scale, Raylib.WHITE);
 
             Raylib.DrawRectangleV(transform.position, collision.size, Raylib.SKYBLUE);
         }
